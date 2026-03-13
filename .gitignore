@@ -1,0 +1,10 @@
+# Personal state (contains execution dates, not for sharing)
+routines/state.md
+
+# macOS
+.DS_Store
+
+# Editor
+*.swp
+*.swo
+*~
