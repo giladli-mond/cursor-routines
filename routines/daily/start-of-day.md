@@ -20,7 +20,7 @@ Read personal Slack direct messages from the last 24 hours. Flag anything import
 **Skill:** `skills/review-campaigns-channels/SKILL.md`
 **State field:** `daily_start.review_campaigns_channels`
 
-Find all Slack channels with your product keyword in the name. Read recent messages, summarise activity and flag important threads.
+Find all Slack channels with "Campaigns" in the name. Read recent messages, summarise activity and flag important threads.
 
 ---
 
@@ -29,7 +29,7 @@ Find all Slack channels with your product keyword in the name. Read recent messa
 **Skill:** `skills/summarise-slack-and-suggest-tasks/SKILL.md`
 **State field:** `daily_start.summarise_slack_suggest_tasks`
 
-Consolidate findings from steps 1 and 2. Produce a unified summary and suggest actionable tasks.
+Consolidate findings from steps 1 and 2. Produce a unified summary and suggest actionable Todoist tasks.
 
 **Depends on:** Steps 1 and 2 must be complete first.
 
@@ -40,7 +40,7 @@ Consolidate findings from steps 1 and 2. Produce a unified summary and suggest a
 **Skill:** `skills/review-daily-metrics/SKILL.md`
 **State field:** `daily_start.review_daily_metrics`
 
-Query main product metrics and surface highlights, anomalies, and trends.
+Query main campaigns metrics and surface highlights, anomalies, and trends.
 
 ---
 

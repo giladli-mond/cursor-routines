@@ -7,113 +7,276 @@ description: Consolidates the week's activity, metrics, Slack discussions, and m
 
 ## When to Use
 
-This skill is called by the weekly routine on **Friday**. It can also be run independently for a week-in-review.
+This skill is called by the weekly routine on **Friday**. It can also be run independently when asked for a week-in-review.
 
 ## Inputs
 
-- Daily metrics outputs from the current week
+- Daily metrics outputs from the current week (in conversation history or `your output folder/`)
 - Daily Slack summaries from the current week
 - Meeting digests from the notetaker
-- Previous week summaries for trend comparison
+- Product Ops weekly summary (if already generated for this week in `your output folder/`)
+- Previous week summaries in `your output folder/` for trend comparison
+
+## Slack Channel IDs (for message sending)
+
+| Channel | ID | Audience |
+|---------|-----|----------|
+| `#monday-campaigns` | `C08H4KT85DZ` | Internal team |
+| `#campaigns-announcements` | `C08S3K72LG5` | Company-wide |
+| `#campaigns-board` | `C0A77SGN8UU` | Directors (eng, product, GTM, design) |
 
 ## Tools
 
-### Slack MCP
+### Slack MCP (`user-slack`)
 
 | Tool | Purpose |
 |------|---------|
-| `slack_search_channels` | Find product channels |
+| `slack_search_channels` | Find campaigns channels |
 | `slack_search_public` | Search for key discussions from this week |
+| `slack_send_message_draft` | Create draft messages in Slack (param: `message`, not `text`) |
 
-### Data Warehouse MCP
-
-| Tool | Purpose |
-|------|---------|
-| SQL query tool | Query weekly metrics aggregates |
-
-### Meeting Notetaker MCP
+### Kremer MCP (`user-kremer-mcp`)
 
 | Tool | Purpose |
 |------|---------|
-| Meeting retrieval tool | Retrieve this week's meetings |
+| `execute-sql-query` | Query weekly metrics aggregates |
+| `data-expert-agent` | Explore trends across the week |
+
+### Monday MCP (`user-monday-api-mcp`)
+
+| Tool | Purpose |
+|------|---------|
+| `get_notetaker_meetings` | Retrieve this week's meetings for summary |
 
 ## Workflow
 
 ### Step 1 -- Gather inputs
 
-1. Read your data guide for current metric definitions
-2. Check for any existing ops summaries from this week
-3. Check for last week's summary (for continuity)
+1. Read `your data guide` for current metric definitions
+2. Check `your output folder/` for any Product Ops summaries from this week
+3. Check `your output folder/` for last week's summary (for continuity)
 4. Retrieve this week's meetings via the notetaker
 
 ### Step 2 -- Compile metrics
 
-Query weekly aggregates for key metrics:
+Query weekly aggregates for the key metrics (use the same metrics as `review-daily-metrics` but aggregated to weekly level):
 - Weekly averages vs previous week
 - Trend direction for each metric
 - Any standout days (spikes, drops)
 
 ### Step 3 -- Summarise Slack activity
 
-Search for the most discussed topics across product channels this week. Identify major decisions, issues, cross-team discussions, and customer threads.
+Search for the most discussed topics across campaigns channels this week. Identify:
+- Major decisions made
+- Issues raised and resolved (or still open)
+- Cross-team discussions
+- Customer-related threads
 
 ### Step 4 -- Summarise meetings
 
-From the notetaker data: key decisions, action items grouped by owner, recurring themes.
+From the notetaker data:
+- Key decisions from each meeting
+- Action items (grouped by owner)
+- Recurring themes across meetings
 
 ### Step 5 -- Write the summary
 
 Produce a cohesive weekly summary that connects the threads.
 
+### Step 6 -- Draft Slack messages
+
+After completing the summary, draft three Slack messages. Each has a different audience and tone. Read `your tone of voice guide` before writing and apply `make-human-lite` to each message.
+
+**Before drafting:** read `your output folder/message-history.md` to review all past messages. This gives you context on what's been said before, what tone landed well, and avoids repetition. If the file doesn't exist, create it.
+
+#### Message 1: Team update (`#monday-campaigns`)
+
+**Audience:** The monday campaigns team (designers, engineers, GTM, analyst).
+**Tone:** No fluff. Festive (it's Friday). True, honest, humble. These are the people who did the work, so give credit where it's due. Name people. Be specific about what shipped and what's next. If something didn't go well, say so honestly. Don't oversell, don't pad.
+**Length:** Short. 8-15 lines. Bullet points for what shipped, a couple of numbers, a shoutout, done.
+**Format:** Slack-native formatting (`*bold*`, `•` bullets).
+
+#### Message 2: Company announcement (`#campaigns-announcements`)
+
+**Audience:** The broader monday.com company.
+**Tone:** Positive, festive, informative. This is a "look what the campaigns team shipped" moment. People outside the team should understand what happened and why it matters. Be proud but not boastful. Focus on customer impact and product progress. Make it easy to skim.
+**Length:** Medium. 10-20 lines. A headline, key highlights, a metric or two, and what's coming next.
+**Format:** Slack-native formatting. Use emoji sparingly (one or two, not a wall of them).
+
+#### Message 3: Director summary (`#campaigns-board`)
+
+**Audience:** Campaigns directors: Director of Engineering, Director of Product, Director of GTM, Director of Design.
+**Tone:** High-level and to the point. These are senior leaders who want the signal, not the noise. Lead with what matters: what shipped, where the metrics are, what's ahead. No filler. Numbers first.
+**Length:** Short. 6-12 lines. A one-line summary, key metrics, top 2-3 things that happened, one thing to watch.
+**Format:** Slack-native formatting.
+
+### Step 7 -- Record messages
+
+After approval of and sends each message, append all three to `your output folder/message-history.md` in this format:
+
+```markdown
+---
+
+## Week of [date range]
+
+### Team (#monday-campaigns)
+[Full message text as sent]
+
+### Company (#campaigns-announcements)
+[Full message text as sent]
+
+### Directors (#campaigns-board)
+[Full message text as sent]
+```
+
+This creates a running record of all weekly communications. The agent should read this file before drafting new messages to maintain continuity and avoid repeating the same phrasing week after week.
+
 ## Output
 
-Save to your weekly summaries folder and present in conversation.
+Generate an HTML file using the routine template at `skills/system/routine-html-template.md`. Read that file for the full CSS and component patterns.
 
+**File:** Save to `your output folder/week-summary-YYYY-MM-DD.html`
+**Also save** a markdown copy to `your output folder/week-summary-YYYY-MM-DD.md` for archival and cross-referencing by other skills.
+**Open:** Run `open` on the HTML file so it launches in the browser.
+**Inline:** Also print a 3-4 line summary in the conversation.
+
+### HTML structure for this skill
+
+```html
+<div class="header">
+  <h1>Week in Review</h1>
+  <div class="subtitle">Week of [date range] · [N] meetings · [N] decisions</div>
+</div>
+
+<div class="section">
+  <div class="summary-text">[3-4 sentences capturing the most important things. What moved, what matters, what to carry forward.]</div>
+</div>
+
+<hr class="divider">
+
+<div class="section">
+  <div class="section-title">What Shipped</div>
+  <div class="card success">
+    <div class="card-title">[Item]</div>
+    <div class="card-body">[Brief detail]</div>
+  </div>
+  <!-- repeat -->
+</div>
+
+<div class="section">
+  <div class="section-title">Metrics Snapshot</div>
+  <div class="metric-grid">
+    <div class="metric-card">
+      <div class="metric-value">[N]</div>
+      <div class="metric-label">DAU (avg)</div>
+      <div class="metric-change [up/down/flat]">[+/- %] vs last week</div>
+    </div>
+    <!-- repeat for each metric -->
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>Metric</th><th>This week</th><th>Last week</th><th>Change</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>[Metric]</td><td>[Value]</td><td>[Value]</td>
+        <td><span class="badge [green/red/gray]">[+/- %]</span></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="section">
+  <div class="section-title">Key Decisions</div>
+  <div class="card highlight">
+    <div class="card-title">[Decision]</div>
+    <div class="card-body">[Context, who decided]</div>
+    <div class="card-meta"><span class="channel">#[channel]</span> or [meeting name]</div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Carry to Next Week</div>
+  <div class="task-row">
+    <div class="task-content">[Item with status and owner]</div>
+    <button class="btn-todoist" onclick="this.classList.toggle('added'); this.innerHTML = this.classList.contains('added') ? '<span class=\'icon\'>✓</span> Added' : '<span class=\'icon\'>+</span> Add to Todoist'">
+      <span class="icon">+</span> Add to Todoist
+    </button>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">Meetings · [N] this week</div>
+  <ul class="item-list">
+    <li><strong>[Meeting title]</strong>: [1-line outcome]</li>
+  </ul>
+</div>
+
+<div class="section">
+  <div class="section-title">Worth Watching</div>
+  <div class="card warning">
+    <div class="card-title">[Trend or signal]</div>
+    <div class="card-body">[Why it matters]</div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<div class="send-instructions">
+  <strong>How sending works:</strong> These buttons mark messages as approved. To actually send, go back to Cursor and tell the agent which messages to post. The agent will use Slack to send them on your behalf.
+</div>
+
+<!-- MESSAGE 1: Team -->
+<div class="section">
+  <div class="message-header">
+    <div class="section-title">Team Update</div>
+    <div class="message-channel">Will post to <span class="channel">#monday-campaigns</span></div>
+  </div>
+  <div class="message-preview">[Draft team message here, using Slack formatting: *bold*, • bullets]</div>
+  <button class="btn-slack" onclick="this.classList.toggle('sent'); this.innerHTML = this.classList.contains('sent') ? '<span class=\'slack-icon\'>✓</span> Approved' : '<span class=\'slack-icon\'>☐</span> Approve to send'">
+    <span class="slack-icon">☐</span> Approve to send
+  </button>
+</div>
+
+<!-- MESSAGE 2: Company -->
+<div class="section">
+  <div class="message-header">
+    <div class="section-title">Company Announcement</div>
+    <div class="message-channel">Will post to <span class="channel">#campaigns-announcements</span></div>
+  </div>
+  <div class="message-preview">[Draft company message here]</div>
+  <button class="btn-slack" onclick="this.classList.toggle('sent'); this.innerHTML = this.classList.contains('sent') ? '<span class=\'slack-icon\'>✓</span> Approved' : '<span class=\'slack-icon\'>☐</span> Approve to send'">
+    <span class="slack-icon">☐</span> Approve to send
+  </button>
+</div>
+
+<!-- MESSAGE 3: Directors -->
+<div class="section">
+  <div class="message-header">
+    <div class="section-title">Director Summary</div>
+    <div class="message-channel">Will post to <span class="channel">#campaigns-board</span></div>
+  </div>
+  <div class="message-preview">[Draft director message here]</div>
+  <button class="btn-slack" onclick="this.classList.toggle('sent'); this.innerHTML = this.classList.contains('sent') ? '<span class=\'slack-icon\'>✓</span> Approved' : '<span class=\'slack-icon\'>☐</span> Approve to send'">
+    <span class="slack-icon">☐</span> Approve to send
+  </button>
+</div>
 ```
-# Week Summary | [date range]
 
-## The week in one paragraph
-
-[3-4 sentences capturing the most important things. What moved, what matters, what to carry forward.]
-
-## What shipped / progressed
-
-- [Item] -- [brief detail]
-
-## Metrics snapshot
-
-| Metric | This week | Last week | Change |
-|--------|-----------|-----------|--------|
-| DAU (avg) | [N] | [N] | [+/- %] |
-| Core actions | [N] | [N] | [+/- %] |
-
-## Key decisions
-
-- [Decision] -- [context, who decided]
-
-## Open items (carry to next week)
-
-- [Item] -- [status and owner]
-
-## Meetings held
-
-[N] meetings this week. Key outcomes:
-- [Meeting]: [1-line outcome]
-
-## Worth watching
-
-- [Trend or signal to monitor]
-```
+After the HTML is presented, ask the user in the conversation which messages to send. When he confirms, use `slack_send_message_draft` for each approved message (never `slack_send_message` directly). Then record all messages in `your output folder/message-history.md`.
 
 ## Guidelines
 
 - This should be a synthesis, not a concatenation of daily summaries
 - Lead with what matters most. The opening paragraph is the most important section
 - Compare with last week where possible to show trajectory
-- If an ops weekly summary exists, build on it rather than duplicating
+- If the Product Ops weekly summary exists, build on it rather than duplicating
+- Create the `your output folder/` directory if it doesn't exist
 
 ## Change Log
 
 | Date | Change |
 |------|--------|
 | 13 Mar 2026 | Initial version |
+| 13 Mar 2026 | Added HTML output. Added three Slack messages: team (#monday-campaigns), company (#campaigns-announcements), directors (#campaigns-board). Added message history archival to your output folder/message-history.md |
