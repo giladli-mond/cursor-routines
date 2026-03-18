@@ -22,7 +22,7 @@ Each routine output is saved with a predictable name:
 ## Opening the File
 
 ```bash
-open [YOUR_OUTPUT_FOLDER]/[filename].html
+open /Users/giladli/Development/the user-Workspace/your output folder/[filename].html
 ```
 
 ## Base HTML Structure
@@ -433,9 +433,19 @@ Below are the HTML patterns for common content types. Combine them as needed.
 
 ### Header
 
+Each routine type uses a personalised greeting with an emoji:
+
+| Routine | Headline |
+|---------|----------|
+| Morning briefing | `☀️ Good morning, the user` |
+| End of day | `🌙 Good evening, the user` |
+| Weekly plan (Monday) | `📋 Let's plan the week, the user` |
+| Weekly summary (Friday) | `📊 Let's review the week, the user` |
+| Quarterly plan | `🗺️ Let's plan the quarter, the user` |
+
 ```html
 <div class="header">
-  <h1>Morning Briefing</h1>
+  <h1>☀️ Good morning, the user</h1>
   <div class="subtitle">Friday 14 March 2026 · 8 channels checked · 12 DMs reviewed</div>
 </div>
 ```

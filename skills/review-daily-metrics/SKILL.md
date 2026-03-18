@@ -30,12 +30,12 @@ These are the default daily metrics. This can be refined this list over time.
 
 | Metric | What it measures | Why it matters |
 |--------|-----------------|----------------|
-| DAU | Daily active users | Product health pulse |
+| ARR | Total annual recurring revenue for marketing product | Revenue health |
+| Paying accounts | Count of paying marketing accounts | Growth indicator |
+| MAPP | Monthly active paying users (from FACT_ACCOUNTS_PRODUCTS_METRICS_DAILY) | Paying user engagement |
 | Campaigns sent (last 24h) | Volume of campaigns sent | Core product usage |
-| Campaign creation rate | New campaigns created | Engagement signal |
+| DAU | Daily active users | Product health pulse |
 | New signups (last 24h) | New accounts entering campaigns | Growth indicator |
-| Activation rate | Signup to first campaign sent | Onboarding health |
-| Conversion to paid | Trial to paid ratio | Revenue pipeline |
 
 **Note:** The specific SQL queries depend on table schemas documented in `your data guide`. Always read the data guide before writing queries to use correct table names, join keys, and known gotchas.
 
