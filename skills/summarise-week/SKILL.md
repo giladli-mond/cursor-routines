@@ -14,6 +14,8 @@ This skill is called by the weekly routine on **Friday**. It can also be run ind
 - Daily metrics outputs from the current week (in conversation history or `your output folder/`)
 - Daily Slack summaries from the current week
 - Meeting digests from the notetaker
+- Gmail highlights from the current week (important emails surfaced in daily routines)
+- Calendar events from the current week (via Google Workspace MCP)
 - Product Ops weekly summary (if already generated for this week in `your output folder/`)
 - Previous week summaries in `your output folder/` for trend comparison
 
@@ -34,6 +36,14 @@ This skill is called by the weekly routine on **Friday**. It can also be run ind
 | `slack_search_channels` | Find campaigns channels |
 | `slack_search_public` | Search for key discussions from this week |
 | `slack_send_message_draft` | Create draft messages in Slack (param: `message`, not `text`) |
+
+### Google Workspace MCP (`user-google-workspace`)
+
+| Tool | Purpose |
+|------|---------|
+| `gmail_search` | Search for important emails from the week |
+| `gmail_get` | Get full content of specific emails for context |
+| `calendar_listEvents` | List this week's calendar events for meeting summary |
 
 ### Kremer MCP (`user-kremer-mcp`)
 
@@ -78,6 +88,48 @@ From the notetaker data:
 - Key decisions from each meeting
 - Action items (grouped by owner)
 - Recurring themes across meetings
+
+Also pull this week's calendar events for a complete meeting picture:
+
+```json
+{
+  "server": "user-google-workspace",
+  "toolName": "calendar_listEvents",
+  "arguments": {
+    "calendarId": "primary",
+    "timeMin": "YYYY-MM-DDT00:00:00Z",
+    "timeMax": "YYYY-MM-DDT23:59:59Z"
+  }
+}
+```
+
+Use this week's Monday as `timeMin` and Friday as `timeMax`. Cross-reference with notetaker data to fill gaps. Note:
+- Total meetings this week and hours spent in meetings
+- Customer/external meetings held (flag these separately)
+- Any meetings that were cancelled or rescheduled
+
+### Step 4b -- Summarise email highlights
+
+Search Gmail for important emails from this week:
+
+```json
+{
+  "server": "user-google-workspace",
+  "toolName": "gmail_search",
+  "arguments": {
+    "query": "newer_than:7d -category:promotions -category:social -category:forums",
+    "maxResults": 50,
+    "labelIds": ["INBOX"]
+  }
+}
+```
+
+From the results, identify the most significant emails of the week:
+- Emails from stakeholders, leadership, or external partners
+- Emails requiring action that may still be outstanding
+- Emails tied to key decisions or product changes
+
+For each, include a direct link: `https://mail.google.com/mail/u/0/#inbox/<messageId>`
 
 ### Step 5 -- Write the summary
 
@@ -214,6 +266,16 @@ Generate an HTML file using the routine template at `skills/system/routine-html-
 </div>
 
 <div class="section">
+  <div class="section-title">Email Highlights</div>
+  <div class="card highlight">
+    <div class="card-title"><a href="https://mail.google.com/mail/u/0/#inbox/[messageId]" target="_blank">[Subject]</a></div>
+    <div class="card-body">From [Sender] · [1-line summary or outcome]</div>
+    <div class="card-meta">[Day received]</div>
+  </div>
+  <!-- repeat for each notable email; use warning card for unanswered, highlight for informational -->
+</div>
+
+<div class="section">
   <div class="section-title">Worth Watching</div>
   <div class="card warning">
     <div class="card-title">[Trend or signal]</div>
@@ -278,5 +340,7 @@ After the HTML is presented, ask the user in the conversation which messages to 
 
 | Date | Change |
 |------|--------|
+| 20 Mar 2026 | Added Google Calendar as input source (Step 4), calendar event listing for complete meeting picture, customer meeting flagging |
+| 19 Mar 2026 | Added Gmail as input source (Step 4b), Email Highlights section in HTML output, Google Workspace MCP tools |
 | 13 Mar 2026 | Initial version |
 | 13 Mar 2026 | Added HTML output. Added three Slack messages: team (#monday-campaigns), company (#campaigns-announcements), directors (#campaigns-board). Added message history archival to your output folder/message-history.md |
