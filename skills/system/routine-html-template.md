@@ -22,7 +22,7 @@ Each routine output is saved with a predictable name:
 ## Opening the File
 
 ```bash
-open /Users/giladli/Development/the user-Workspace/your output folder/[filename].html
+open [your-workspace-path] user-Workspace/your output folder/[filename].html
 ```
 
 ## Base HTML Structure
@@ -329,12 +329,20 @@ Every routine HTML file follows this structure. Copy the full `<style>` block as
     gap: 12px;
     padding: 10px 0;
     border-bottom: 1px solid #1a1a1a;
+    transition: opacity 0.2s ease;
   }
   .task-row:last-child { border-bottom: none; }
+  .task-row.completed { opacity: 0.4; }
+  .task-row.completed .task-content { text-decoration: line-through; }
   .task-content {
     flex: 1;
     color: #d4d4d4;
     font-size: 14px;
+  }
+  .task-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
   }
   .task-priority {
     font-size: 11px;
@@ -343,6 +351,83 @@ Every routine HTML file follows this structure. Copy the full `<style>` block as
     letter-spacing: 0.4px;
     flex-shrink: 0;
   }
+
+  /* Done button */
+  .btn-done {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: 1px solid #333;
+    color: #999;
+    font-size: 12px;
+    padding: 4px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-family: inherit;
+  }
+  .btn-done:hover {
+    border-color: #4ade80;
+    color: #4ade80;
+    background: #052e16;
+  }
+  .btn-done.done {
+    border-color: #4ade80;
+    color: #4ade80;
+    background: #052e16;
+  }
+  .btn-done .icon { font-size: 14px; }
+
+  /* Postpone button */
+  .btn-postpone {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: 1px solid #333;
+    color: #999;
+    font-size: 12px;
+    padding: 4px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-family: inherit;
+  }
+  .btn-postpone:hover {
+    border-color: #fbbf24;
+    color: #fbbf24;
+    background: #2a1f00;
+  }
+  .btn-postpone.postponed {
+    border-color: #fbbf24;
+    color: #fbbf24;
+    background: #2a1f00;
+  }
+  .btn-postpone .icon { font-size: 14px; }
+
+  /* Open in Todoist link-button */
+  .btn-open-todoist {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: 1px solid #333;
+    color: #999;
+    font-size: 12px;
+    padding: 4px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-family: inherit;
+    text-decoration: none;
+  }
+  .btn-open-todoist:hover {
+    border-color: #00d4ff;
+    color: #00d4ff;
+    background: #0a1a2e;
+  }
+  .btn-open-todoist .icon { font-size: 14px; }
 
   /* List items */
   .item-list {
@@ -523,24 +608,34 @@ Each routine type uses a personalised greeting with an emoji:
 </table>
 ```
 
-### Suggested tasks (with Todoist buttons)
+### Suggested tasks (with Todoist and Done buttons)
 
-The Todoist buttons are visual indicators. The agent handles actual task creation based on the user's confirmation. The button uses `onclick` to toggle its state visually.
+Each task row has two buttons: **Done** (marks the task as completed, strikes through and fades the row) and **Add to Todoist** (marks the task for Todoist creation). Both are visual toggles. The agent handles actual Todoist creation based on the user's confirmation.
 
 ```html
 <div class="section">
   <div class="section-title">Suggested Tasks</div>
   <div class="task-row">
     <div class="task-content">Reply to Shannon about unified editor compliance copy</div>
-    <button class="btn-todoist" onclick="this.classList.toggle('added'); this.innerHTML = this.classList.contains('added') ? '<span class=\'icon\'>✓</span> Added' : '<span class=\'icon\'>+</span> Add to Todoist'">
-      <span class="icon">+</span> Add to Todoist
-    </button>
+    <div class="task-actions">
+      <button class="btn-done" onclick="this.classList.toggle('done'); this.closest('.task-row').classList.toggle('completed'); this.innerHTML = this.classList.contains('done') ? '<span class=\'icon\'>✓</span> Done' : '<span class=\'icon\'>○</span> Done'">
+        <span class="icon">○</span> Done
+      </button>
+      <button class="btn-todoist" onclick="this.classList.toggle('added'); this.innerHTML = this.classList.contains('added') ? '<span class=\'icon\'>✓</span> Added' : '<span class=\'icon\'>+</span> Add to Todoist'">
+        <span class="icon">+</span> Add to Todoist
+      </button>
+    </div>
   </div>
   <div class="task-row">
     <div class="task-content">Review Qodo setup and agree on usage with team</div>
-    <button class="btn-todoist" onclick="this.classList.toggle('added'); this.innerHTML = this.classList.contains('added') ? '<span class=\'icon\'>✓</span> Added' : '<span class=\'icon\'>+</span> Add to Todoist'">
-      <span class="icon">+</span> Add to Todoist
-    </button>
+    <div class="task-actions">
+      <button class="btn-done" onclick="this.classList.toggle('done'); this.closest('.task-row').classList.toggle('completed'); this.innerHTML = this.classList.contains('done') ? '<span class=\'icon\'>✓</span> Done' : '<span class=\'icon\'>○</span> Done'">
+        <span class="icon">○</span> Done
+      </button>
+      <button class="btn-todoist" onclick="this.classList.toggle('added'); this.innerHTML = this.classList.contains('added') ? '<span class=\'icon\'>✓</span> Added' : '<span class=\'icon\'>+</span> Add to Todoist'">
+        <span class="icon">+</span> Add to Todoist
+      </button>
+    </div>
   </div>
 </div>
 ```
