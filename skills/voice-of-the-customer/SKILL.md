@@ -1,6 +1,6 @@
 ---
 name: voice-of-the-customer
-description: Aggregates customer insights from six sources (product usage data, ask-campaigns Slack, churn signals, Reddit forums, Mixpanel behaviour, internal team discussions) into a themed VoC report. Use when asked for a voice of the customer report, VoC analysis, customer insights roundup, or customer signal review.
+description: Aggregates customer insights from seven sources (product usage data, ask-campaigns Slack, churn signals, Reddit forums, Mixpanel behaviour, Gong call insights, internal team discussions) into a themed VoC report. Use when asked for a voice of the customer report, VoC analysis, customer insights roundup, or customer signal review.
 ---
 
 # Voice of the Customer
@@ -13,7 +13,6 @@ Run this skill bi-weekly or when asked for a customer insights roundup. Not part
 
 ## Inputs
 
-- Memory files: `your learnings file`, `your decisions file`, `Memory/feedback.md` (read before starting for preferences and past feedback)
 - Previous VoC reports: `Output/voice-of-customer/` (read most recent 2-3 for running context)
 - Data guide: `your data guide` (read before querying Snowflake)
 - Product strategy: `your product strategy documentation` (for connecting themes to strategy)
@@ -46,6 +45,17 @@ Run this skill bi-weekly or when asked for a customer insights roundup. Not part
 | `Get-Events` | List available events for discovery |
 | `Get-Issues` | Surface data quality issues and anomalies |
 | `Get-User-Replays-Data` | Session replays for qualitative behaviour insight |
+
+### Gong MCP (`user-gong`)
+
+| Tool | Purpose |
+|------|---------|
+| `list_calls` | List recent calls with date filtering |
+| `get_call` | Get call metadata including the Gong URL (needed for deep links) |
+| `get_call_summary` | AI-generated summary: key points, topics, action items |
+| `search_calls` | Search calls by host, date range, or workspace |
+| `get_trackers` | List keyword trackers (competitors, topics, objections) |
+| `get_call_transcript` | Full speaker-attributed transcript with timing (use for notable quotes) |
 
 ### Web Search
 
@@ -158,7 +168,34 @@ Use the Mixpanel MCP to query feature-level engagement. Requires `project_id` (c
 
 **Note:** If the Mixpanel project ID is not yet known, use `Get-Events` to discover it or ask the user. Skip this section gracefully if Mixpanel is not configured.
 
-### 6. Internal Team Voice (Slack)
+### 6. Customer Call Insights (Gong)
+
+Pull call summaries from the last 14 days to surface recurring themes, objections, and feature discussions from customer and prospect conversations.
+
+**Workflow:**
+1. `list_calls` with `fromDateTime` set to 14 days ago
+2. `get_call_summary` for each call (batch in groups to manage volume; prioritise the most recent 15-20 calls)
+3. `get_trackers` to pull keyword tracker results (competitor mentions, objection tracking, topic trends)
+4. For calls with particularly interesting summaries, use `get_call` to get the call URL, then `get_call_transcript` to find the exact quote and its timestamp
+5. Construct a deep link for each notable quote: `{call_url}#t={timestamp_in_seconds}` (the timestamp comes from the transcript's timing data)
+
+**What to extract:**
+- Recurring customer pain points raised on calls
+- Feature requests or product gaps mentioned by customers or prospects
+- Competitor mentions and how monday campaigns is compared
+- Common objections during sales or CS conversations
+- Positive feedback and "aha moments" from call summaries
+- Action items from calls that signal product needs
+- Notable verbatim quotes with Gong deep links (aim for 2-4 standout quotes per report)
+
+**What to look for:**
+- Themes appearing across multiple calls (strong signal)
+- Tracker keywords trending up or down vs previous cycles
+- Discrepancies between what customers say on calls vs what they write in Slack or support channels
+
+**Note:** If the Gong MCP is not configured or returns no calls, skip gracefully and note it in the output.
+
+### 7. Internal Team Voice (Slack)
 
 Search for customer-related discussions across monday Slack channels from the last 14 days.
 
@@ -214,11 +251,22 @@ Run web searches from Data Source 4. For each relevant post:
 
 Query Mixpanel per Data Source 5. If not configured, skip and note it in the output.
 
-### Step 7 -- Search internal team voice
+### Step 7 -- Pull Gong call insights
 
-Search Slack per Data Source 6. Extract what the team is hearing from customers informally.
+Pull call summaries and tracker data per Data Source 6. For each call summary:
+- Extract recurring pain points, feature requests, and competitor mentions
+- Note sentiment and whether the theme is new or recurring
+- Cross-reference tracker keywords with themes from other sources
 
-### Step 8 -- Synthesise into themes
+For the most compelling themes, pull the transcript to find the exact quote. Use `get_call` to retrieve the call URL, then construct a deep link: `{call_url}#t={timestamp_seconds}`. Aim for 2-4 linked quotes that best illustrate the key themes.
+
+If the Gong MCP is not configured, skip and note it in the output.
+
+### Step 8 -- Search internal team voice
+
+Search Slack per Data Source 7. Extract what the team is hearing from customers informally.
+
+### Step 9 -- Synthesise into themes
 
 Cross-reference all sources. Group observations into themes using affinity mapping.
 
@@ -421,6 +469,51 @@ Open the file with `open` (macOS) so it launches in the browser.
 
 <hr class="divider">
 
+<!-- Customer Call Insights (Gong) -->
+<div class="section">
+  <div class="section-title">Customer Call Insights · Gong</div>
+
+  <div class="metric-grid">
+    <div class="metric-card">
+      <div class="metric-value">[N]</div>
+      <div class="metric-label">Calls reviewed</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value">[N]</div>
+      <div class="metric-label">Unique themes</div>
+    </div>
+  </div>
+
+  <div class="card highlight">
+    <div class="card-label highlight">[Theme from calls]</div>
+    <div class="card-title">[Key finding]</div>
+    <div class="card-body">[Summary with evidence from call summaries. Mention frequency across calls.]</div>
+  </div>
+
+  <div class="card warning">
+    <div class="card-label warning">Competitor mentions</div>
+    <div class="card-title">[Most-mentioned competitor or comparison theme]</div>
+    <div class="card-body">[What's being said, tracker data if available]</div>
+  </div>
+
+  <!-- Notable quotes with deep links -->
+  <div class="card">
+    <div class="card-label">Notable quotes</div>
+    <div class="card-body">
+      <blockquote>"[Verbatim quote from customer]"<br>
+        <span class="quiet">— [Speaker], <a href="[call_url]#t=[timestamp_seconds]">[Call title, date]</a></span>
+      </blockquote>
+      <blockquote>"[Another quote]"<br>
+        <span class="quiet">— [Speaker], <a href="[call_url]#t=[timestamp_seconds]">[Call title, date]</a></span>
+      </blockquote>
+    </div>
+  </div>
+
+  <p class="quiet">If Gong not configured: "Gong call data not available for this cycle."</p>
+</div>
+
+<hr class="divider">
+
 <!-- Strategic Implications -->
 <div class="section">
   <div class="section-title">Strategic Implications</div>
@@ -521,6 +614,21 @@ theme. Connect to strategy and previous reports.]
 
 - [Finding with numbers]
 
+## Customer Call Insights (Gong)
+
+### Call themes (14 days, [N] calls reviewed)
+- [Recurring theme] -- [N] calls -- [sentiment]
+
+### Competitor mentions
+- [Competitor] -- [context of how they're compared] -- [N] mentions
+
+### Notable quotes
+> "[Verbatim quote]"
+> — [Speaker], [Call title, date] ([listen in Gong]({call_url}#t={timestamp_seconds}))
+
+### Notable signals
+- [Insight from call summaries or tracker data]
+
 ## Internal Team Voice
 
 - [What the team is hearing] -- [Channel] -- [Date]
@@ -543,7 +651,7 @@ theme. Connect to strategy and previous reports.]
 ---
 
 *Previous report:* [link to previous report file, or "First report"]
-*Sources analysed:* [date range] · Snowflake, ask-campaigns, campaigns-churns, Reddit, Mixpanel, Internal Slack
+*Sources analysed:* [date range] · Snowflake, ask-campaigns, campaigns-churns, Reddit, Mixpanel, Gong, Internal Slack
 *Freshness:* Research conducted [date]
 ```
 
@@ -558,10 +666,10 @@ theme. Connect to strategy and previous reports.]
 - The HTML report should be scannable in ~90 seconds. The markdown report has the depth
 - Read `your tone of voice guide` before writing
 - If a data source is unavailable (e.g. Mixpanel not configured), skip gracefully and note it
-- **After approval of:** update `Memory/feedback.md` (what worked/what to improve), `your learnings file` (new preferences), and `your decisions file` (meaningful decisions)
 
 ## Change Log
 
 | Date | Change |
 |------|--------|
 | 18 Mar 2026 | Initial version. Six data sources: product usage (Kremer), ask-campaigns (Slack), churn signals (Kremer + Slack), Reddit (web search), Mixpanel (behavioural), internal team voice (Slack). Bi-weekly cadence, standalone skill. |
+| 31 Mar 2026 | Added Gong as 7th data source. Pulls call summaries and keyword tracker data to surface recurring themes, competitor mentions, and objections from customer conversations. |
